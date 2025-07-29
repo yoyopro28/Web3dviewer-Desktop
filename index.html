@@ -146,28 +146,36 @@
 </head>
 <body>
   <div id="instructions" style="display:none;">Click to start exploring</div>
-  <div id="menu" style="display:none;">
-    <label for="speedSlider">Bewegungsgeschwindigkeit: <span id="speedValue">5</span></label>
-    <input type="range" min="1" max="30" step="0.1" id="speedSlider" value="5">
-    <div class="slider-tip">Mit <b>Mausrad</b> & <b>Shift</b> feinjustieren</div>
-    <div style="margin-bottom:0.6em;color:#aaa;font-size:0.93em;">(Sprint: <span id="sprintValue">10</span>)</div>
-    <label for="scaleSlider" style="margin-top:2em;">Modell-Scale: <span id="scaleValue">1.00</span></label>
-    <input type="range" min="0.01" max="10" step="0.01" id="scaleSlider" value="1">
-    <div class="slider-tip">Mit <b>Mausrad</b> & <b>Shift</b> feinjustieren</div>
-    <button id="resetPosition" style="margin-top:2em;">Zurück zum Start</button>
-    <button id="closeMenu" style="margin-left:1.2em;margin-top:2em;">Schließen</button>
-    <div style="margin-top:1.4em;color:#aaa;font-size:0.98em;">
-      <b>Steuerung:</b><br>
-      <b>WASD</b> – Bewegen<br>
-      <b>Leertaste</b> – Hoch (Creative / Fliegen), Springen (Survival)<br>
-      <b>Shift</b> – Runter (Creative / Fliegen), Schleichen (Survival)<br>
-      <b>Doppel-Leertaste</b> – Fliegen toggelt (Creative)<br>
-      <b>Doppelt W</b> – Sprinten<br>
-      <b>M</b> – Moduswechsel (Creative/Survival)<br>
-      <b>Tab</b> – Menü öffnen<br>
-      <b>Esc</b> – Menü schließen
-    </div>
+  <!-- Geordneter HTML-Abschnitt für das Menu -->
+<div id="menu" style="display:none;">
+  <label for="speedSlider">Bewegungsgeschwindigkeit: <span id="speedValue">5</span></label>
+  <input type="range" min="1" max="30" step="0.1" id="speedSlider" value="5">
+
+  <label for="fovSlider" style="margin-top:2em;">Sichtfeld (FOV): <span id="fovValue">75</span>°</label>
+  <input type="range" min="30" max="120" step="1" id="fovSlider" value="75">
+  <div class="slider-tip">Mit <b>Mausrad</b> & <b>Shift</b> feinjustieren</div>
+  <div style="margin-bottom:0.6em;color:#aaa;font-size:0.93em;">(Sprint: <span id="sprintValue">10</span>)</div>
+
+  <label for="scaleSlider" style="margin-top:2em;">Modell-Scale: <span id="scaleValue">1.00</span></label>
+  <input type="range" min="0.01" max="10" step="0.01" id="scaleSlider" value="1">
+  <div class="slider-tip">Mit <b>Mausrad</b> & <b>Shift</b> feinjustieren</div>
+
+  <button id="resetPosition" style="margin-top:2em;">Zurück zum Start</button>
+  <button id="closeMenu" style="margin-left:1.2em;margin-top:2em;">Schließen</button>
+
+  <div style="margin-top:1.4em;color:#aaa;font-size:0.98em;">
+    <b>Steuerung:</b><br>
+    <b>WASD</b> – Bewegen<br>
+    <b>Leertaste</b> – Hoch (Creative / Fliegen), Springen (Survival)<br>
+    <b>Shift</b> – Runter (Creative / Fliegen), Schleichen (Survival)<br>
+    <b>Doppel-Leertaste</b> – Fliegen toggelt (Creative)<br>
+    <b>Doppelt W</b> – Sprinten<br>
+    <b>M</b> – Moduswechsel (Creative/Survival)<br>
+    <b>Tab</b> – Menü öffnen<br>
+    <b>Esc</b> – Menü schließen
   </div>
+</div>
+
   <div id="modeDisplay"></div>
   <div id="uploader">
     <label for="fileInput">Lade dein 3D-Modell hoch</label>
@@ -228,6 +236,9 @@
     const uploadError = document.getElementById('uploadError');
     const scaleSlider = document.getElementById('scaleSlider');
     const scaleValue = document.getElementById('scaleValue');
+    const fovSlider = document.getElementById('fovSlider');
+const fovValue = document.getElementById('fovValue');
+
     const loadingSpinner = document.getElementById('loadingSpinner');
     const controlsHint = document.getElementById('controlsHint');
     
@@ -260,8 +271,8 @@
     function updateModeDisplay() {
       modeDisplay.textContent =
         (mode === 'creative'
-          ? `Modus: Fliegen (${flying ? 'Fliegen' : 'Fallen'}) – Doppelt Leertaste toggelt Fliegen – Drücke M für Normal`
-          : 'Modus: Normal (Kollision!) – Drücke M für Fliegen'
+          ? `Modus: Creative (${flying ? 'Fliegen' : 'Fallen'}) – Doppelt Leertaste toggelt Fliegen – Drücke M für Survival`
+          : 'Modus: Survival (Kollision!) – Drücke M für Creative'
         );
       modeDisplay.style.opacity = '1';
       modeChangedTime = performance.now();
@@ -276,6 +287,11 @@
       paused = false;
       controls.lock();
     }
+    function updateFOVUI() {
+  if (!camera || !(camera instanceof THREE.PerspectiveCamera)) return;
+  fovValue.textContent = camera.fov.toFixed(0);
+}
+
 
     closeMenuBtn.onclick = hideMenu;
     resetBtn.onclick = () => resetPosition();
@@ -330,9 +346,19 @@
     scaleSlider.oninput = () => {
       scaleModelWithAnchor(parseFloat(scaleSlider.value));
     };
+    fovSlider.oninput = () => {
+  const newFOV = parseFloat(fovSlider.value);
+  if (camera && camera instanceof THREE.PerspectiveCamera) {
+    camera.fov = newFOV;
+    camera.updateProjectionMatrix();
+    updateFOVUI();
+  }
+};
+
 
     updateSpeedUI();
     updateScaleUI();
+    updateFOVUI();
 
     sliderWheelHandler(speedSlider, 0.5, 0.1, () => {
       speed.base = parseFloat(speedSlider.value);
