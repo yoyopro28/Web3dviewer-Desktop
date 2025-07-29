@@ -260,8 +260,8 @@
     function updateModeDisplay() {
       modeDisplay.textContent =
         (mode === 'creative'
-          ? `Modus: Creative (${flying ? 'Fliegen' : 'Fallen'}) – Doppelt Leertaste toggelt Fliegen – Drücke M für Survival`
-          : 'Modus: Survival (Kollision!) – Drücke M für Creative'
+          ? `Modus: Fliegen (${flying ? 'Fliegen' : 'Fallen'}) – Doppelt Leertaste toggelt Fliegen – Drücke M für Normal`
+          : 'Modus: Normal (Kollision!) – Drücke M für Fliegen'
         );
       modeDisplay.style.opacity = '1';
       modeChangedTime = performance.now();
